@@ -21,10 +21,10 @@ def parse_args(args=None):
 
 def train(args):
     pl.seed_everything(224)
-    dm = DataModule(csv_path=args.data_path, data_split=args.data_split, batch_size=args.batch_size, do_use_ddp=True, clip_duration=args.clip_duration, decode_audio=True)
+    dm = DataModule(csv_path=args.data_path, data_split=args.data_split, batch_size=args.batch_size, clip_duration=args.clip_duration, decode_audio=True)
     model = BaseModel(video_net_name=args.video_model, audio_net_name=args.audio_model, text_net_name=args.text_model, lr_v=args.learning_rate_video, lr_a=args.learning_rate_audio, lr_t=args.learning_rate_text, batch_size=args.batch_size)
     callbacks = [pl.callbacks.LearningRateMonitor(), pl.callbacks.ModelCheckpoint(monitor="val_loss")]
-    trainer = pl.Trainer(callbacks=callbacks, accelerator="gpu", devices=4, strategy="ddp", max_epochs=-1)
+    trainer = pl.Trainer(callbacks=callbacks, accelerator="gpu", devices=4, strategy="ddp", max_epochs=-1, replace_sampler_ddp=False)
     trainer.fit(model, dm)
 
 

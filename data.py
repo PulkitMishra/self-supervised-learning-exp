@@ -16,7 +16,7 @@ from torchaudio.transforms import MelSpectrogram, Resample
 from utils import LimitDataset, get_data_from_csv, PackPathway, TextPreprocess
 
 class DataModule(pl.LightningDataModule):
-    def __init__(self, csv_path, data_split, batch_size, do_use_ddp, clip_duration, decode_audio):
+    def __init__(self, csv_path, data_split, batch_size, clip_duration, decode_audio):
         super().__init__()
         self.batch_size = batch_size
         self.do_use_ddp = do_use_ddp
@@ -145,7 +145,7 @@ class DataModule(pl.LightningDataModule):
             LabeledVideoDataset(
                 labeled_video_paths=self.train_videos_labels,
                 clip_sampler=make_clip_sampler("random", self.clip_duration),
-                video_sampler=DistributedSampler if self.do_use_ddp else RandomSampler,
+                video_sampler=RandomSampler,
                 transform=self.train_transform,
                 decode_audio=self.decode_audio,
             )
@@ -157,7 +157,7 @@ class DataModule(pl.LightningDataModule):
             LabeledVideoDataset(
                 labeled_video_paths=self.val_videos_labels,
                 clip_sampler=make_clip_sampler("uniform", self.clip_duration),
-                video_sampler=DistributedSampler if self.do_use_ddp else RandomSampler,
+                video_sampler=RandomSampler,
                 transform=self.val_transform,
                 decode_audio=self.decode_audio,
             )
