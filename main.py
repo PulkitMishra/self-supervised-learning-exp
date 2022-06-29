@@ -2,6 +2,7 @@ import pytorch_lightning as pl
 from data import DataModule
 from model import BaseModel
 from argparse import ArgumentParser
+from pytorch_lightning.loggers import WandbLogger
 
 def parse_args(args=None):
     parser = ArgumentParser()
@@ -23,9 +24,13 @@ def train(args):
     pl.seed_everything(224)
     dm = DataModule(csv_path=args.data_path, data_split=args.data_split, batch_size=args.batch_size, clip_duration=args.clip_duration, decode_audio=True)
     model = BaseModel(video_net_name=args.video_model, audio_net_name=args.audio_model, text_net_name=args.text_model, lr_v=args.learning_rate_video, lr_a=args.learning_rate_audio, lr_t=args.learning_rate_text, batch_size=args.batch_size)
-    callbacks = [pl.callbacks.LearningRateMonitor(), pl.callbacks.ModelCheckpoint(monitor="val_loss")]
-    trainer = pl.Trainer(callbacks=callbacks, accelerator="gpu", devices=4, strategy="ddp", max_epochs=-1, replace_sampler_ddp=False)
+    callbacks = [pl.callbacks.LearningRateMonitor(), pl.callbacks.ModelCheckpoint(monitor="val_loss", mode="min")]
+    wandb_logger = WandbLogger(project="SSL", log_model="all")
+    #wandb_logger.watch(model, log='all', log_freq=500) - log gradients
+    wandb_logger.experiment.log_code(root='.')
+    trainer = pl.Trainer(logger=wandb_logger, callbacks=callbacks, accelerator="gpu", devices=4, strategy="ddp", max_epochs=-1, replace_sampler_ddp=False)
     trainer.fit(model, dm)
+    #wandb_logger.unwatch(model)
 
 
 def main():

@@ -17,7 +17,7 @@ class BaseModel(pl.LightningModule):
         self.audio_projection = project_audio()
         self.text_projection = project_text()
         #self.automatic_optimization = False
-    
+
     def configure_optimizers(self):
         optim_video = torch.optim.Adam(self.video_encoder.parameters(), self.hparams.lr_v)
         optim_audio = torch.optim.Adam(self.audio_encoder.parameters(), self.hparams.lr_a)
@@ -25,14 +25,12 @@ class BaseModel(pl.LightningModule):
         return optim_video, optim_audio, optim_text
     
     def training_step(self, batch, batch_idx, optimizer_idx):
-        print(batch_idx)
-        print(batch['video_name'])
         videos, audios, texts = batch["video"], batch["audio"], batch["text"]
         video_embeds = self.video_projection(self.video_encoder(videos))
         audio_embeds = self.audio_projection(self.audio_encoder(audios))
         text_embeds = self.text_projection(torch.max(self.text_encoder(texts), dim=2)[0])
         loss = self.loss(video_embeds, audio_embeds, text_embeds)
-        self.log('train_loss', loss)
+        self.log('train_loss', loss, batch_size=self.hparams.batch_size)
         return loss
     
     def validation_step(self, batch, batch_idx):
@@ -41,7 +39,7 @@ class BaseModel(pl.LightningModule):
         audio_embeds = self.audio_projection(self.audio_encoder(audios))
         text_embeds = self.text_projection(torch.max(self.text_encoder(texts), dim=2)[0])
         loss = self.loss(video_embeds, audio_embeds, text_embeds)
-        self.log('val_loss', loss)
+        self.log('val_loss', loss, batch_size=self.hparams.batch_size)
         return loss
     
 

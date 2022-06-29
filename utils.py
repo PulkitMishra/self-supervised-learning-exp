@@ -50,7 +50,7 @@ def get_data_from_csv(csv_path, data_split):
     video_label_paths = []
     with open(csv_path, 'r') as f:
         for path_label in f.read().splitlines():
-            path, label = path_label.split(" ", 1)
+            path, label = path_label.split(",", 1)
             video_label_paths.append((path, {"text":label}))
     split_index = int(data_split*len(video_label_paths))
     return video_label_paths[:split_index], video_label_paths[split_index:]
